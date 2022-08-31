@@ -13,7 +13,6 @@ from elasticpath_management import *
 _database = None
 
 
-# def start(bot, update, elasticpath_token):
 def start(update, context, elasticpath_token):
     """
     Хэндлер для состояния START.
@@ -45,9 +44,19 @@ def handle_menu(update, context, elasticpath_token):
     query.answer()
 
     product = get_product(elasticpath_token, query.data)
+    product_id = product['data']['id']
     product_description = product['data']['attributes']['description']
+    product_files = get_product_files(elasticpath_token, product_id)
 
-    query.edit_message_text(text=product_description)
+    product_files_ids = product_files['data'][0]['id']
+
+    file = get_file_by_id(elasticpath_token, product_files_ids)
+    file_url = file['data']['link']['href']
+
+    context.bot.send_photo(chat_id=update.effective_chat.id, photo=file_url, caption=product_description)
+    # context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.id)
+
+    # query.edit_message_text(text=product_description)
 
     return 'START'
 

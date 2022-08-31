@@ -44,6 +44,32 @@ def get_product(token, product_id):
     return product.json()
 
 
+def get_product_files(token, product_id):
+    url = f'https://api.moltin.com/pcm/products/{product_id}/relationships/files'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    product_files = requests.get(url=url, headers=headers)
+    # product_files.raise_for_status()
+
+    return product_files.json()
+
+
+def get_file_by_id(token, file_id):
+    url = f'https://api.moltin.com/v2/files/{file_id}'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    file = requests.get(url=url, headers=headers)
+    # file.raise_for_status()
+
+    return file.json()
+
+
 def create_customer(token, name, email):
     url = f'https://api.moltin.com/v2/customers'
     headers = {
