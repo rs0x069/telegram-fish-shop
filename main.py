@@ -13,8 +13,8 @@ from elasticpath_management import *
 _database = None
 
 
-def start(bot, update, elasticpath_token):
-# def start(update, context, elasticpath_token):
+# def start(bot, update, elasticpath_token):
+def start(update, context, elasticpath_token):
     """
     Хэндлер для состояния START.
 
@@ -35,35 +35,24 @@ def start(bot, update, elasticpath_token):
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
 
     update.message.reply_text(text='Please choose:', reply_markup=reply_markup)
-    return "ECHO"
+
+    return 'HANDLE_MENU'
 
 
-def button(update, context):
+def handle_menu(update, context, elasticpath_token):
     query = update.callback_query
 
     query.answer()
 
-    query.edit_message_text(
-        text=f'Selected option: {query.data}',
-    )
+    product = get_product(elasticpath_token, query.data)
+    product_description = product['data']['attributes']['description']
 
-    return "ECHO"
+    query.edit_message_text(text=product_description)
 
-
-def echo(bot, update):
-    """
-    Хэндлер для состояния ECHO.
-
-    Бот отвечает пользователю тем же, что пользователь ему написал.
-    Оставляет пользователя в состоянии ECHO.
-    """
-    users_reply = update.message.text
-    update.message.reply_text(users_reply)
-    return "ECHO"
+    return 'START'
 
 
-# def handle_users_reply(bot, update):
-def handle_users_reply(update, bot, elasticpath_token):
+def handle_users_reply(update, context, elasticpath_token):
     """
     Функция, которая запускается при любом сообщении от пользователя и решает как его обработать.
     Эта функция запускается в ответ на эти действия пользователя:
@@ -92,14 +81,14 @@ def handle_users_reply(update, bot, elasticpath_token):
 
     states_functions = {
         'START': start,
-        'ECHO': echo
+        'HANDLE_MENU': handle_menu,
     }
     state_handler = states_functions[user_state]
     # Если вы вдруг не заметите, что python-telegram-bot перехватывает ошибки.
     # Оставляю этот try...except, чтобы код не падал молча.
     # Этот фрагмент можно переписать.
     try:
-        next_state = state_handler(bot, update, elasticpath_token)
+        next_state = state_handler(update, context, elasticpath_token)
         db.set(chat_id, next_state)
     except Exception as err:
         print(f'Exception: {err}')
@@ -150,11 +139,6 @@ def main():
     updater.start_polling()
     updater.idle()
 
-    # products = get_all_products(token)
-    # first_product_id = products['data'][1]['id']
-    # print(f'{products=}')
-    # print(f'{first_product_id=}')
-    #
     # # customer = create_customer(token, name='Ivan', email='ivan@localhost.com')
     # # print(customer)
     #

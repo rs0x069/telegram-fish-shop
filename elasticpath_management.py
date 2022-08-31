@@ -26,9 +26,22 @@ def get_all_products(token):
     }
 
     products = requests.get(url=url, headers=headers)
-    products.raise_for_status()
+    # products.raise_for_status()
 
     return products.json()
+
+
+def get_product(token, product_id):
+    url = f'https://api.moltin.com/pcm/products/{product_id}'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    product = requests.get(url=url, headers=headers)
+    # product.raise_for_status()
+
+    return product.json()
 
 
 def create_customer(token, name, email):
