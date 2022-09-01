@@ -46,17 +46,17 @@ def handle_menu(update, context, elasticpath_token):
     product = get_product(elasticpath_token, query.data)
     product_id = product['data']['id']
     product_description = product['data']['attributes']['description']
+
+    # TODO: What else no image?
     product_files = get_product_files(elasticpath_token, product_id)
 
-    product_files_ids = product_files['data'][0]['id']
+    product_files_ids = product_files['data'][1]['id']
 
     file = get_file_by_id(elasticpath_token, product_files_ids)
     file_url = file['data']['link']['href']
 
     context.bot.send_photo(chat_id=update.effective_chat.id, photo=file_url, caption=product_description)
-    # context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.id)
-
-    # query.edit_message_text(text=product_description)
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
     return 'START'
 
