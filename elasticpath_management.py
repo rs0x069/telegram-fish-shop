@@ -177,7 +177,7 @@ def get_cart_items(token, cart_id):
     return cart_items.json()
 
 
-def add_product_to_cart(token, cart_id, product_id):
+def add_product_to_cart(token, cart_id, product_id, quantity):
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
 
     headers = {
@@ -188,7 +188,7 @@ def add_product_to_cart(token, cart_id, product_id):
         'data': {
             'id': product_id,
             'type': 'cart_item',
-            'quantity': 1,
+            'quantity': quantity,
         }
     }
 

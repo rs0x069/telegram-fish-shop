@@ -47,9 +47,9 @@ def show_description_with_image(update, context, elasticpath_token, query_data):
 
     keyboard = [
         [
-            InlineKeyboardButton('1 кг', callback_data='1'),
-            InlineKeyboardButton('5 кг', callback_data='5'),
-            InlineKeyboardButton('10 кг', callback_data='10'),
+            InlineKeyboardButton('1 кг', callback_data=f'{product_id}_1'),
+            InlineKeyboardButton('5 кг', callback_data=f'{product_id}_5'),
+            InlineKeyboardButton('10 кг', callback_data=f'{product_id}_10'),
         ],
         [InlineKeyboardButton('Назад', callback_data='back')]
     ]
@@ -95,11 +95,12 @@ def handle_description(update, context, elasticpath_token):
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
         return 'HANDLE_MENU'
 
+    product_id = query.data.split('_')[0]
+    product_quantity = query.data.split('_')[1]
+
     tg_user_id = update.effective_user.id
-    # customer = create_customer(elasticpath_token, name='Ivan', email='ivan@localhost.com')
-    custom_cart = get_custom_cart(elasticpath_token, "11111111")
-    print(f'{custom_cart=}')
-    # custom_cart = create_custom_cart(elasticpath_token, name=tg_user_id, cart_id=tg_user_id)
+    add_product_to_cart(elasticpath_token, tg_user_id, product_id, int(product_quantity))
+    cart_items = get_cart_items(elasticpath_token, tg_user_id)
 
     return 'HANDLE_DESCRIPTION'
 
