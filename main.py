@@ -13,11 +13,8 @@ from elasticpath_management import *
 _database = None
 
 
-def start(update, context, elasticpath_token):
-    print('start')
-
+def show_menu(update, context, elasticpath_token):
     keyboard_buttons = []
-
     products = get_all_products(elasticpath_token)
     for product in products['data']:
         keyboard_buttons.append(
@@ -27,10 +24,50 @@ def start(update, context, elasticpath_token):
         )
 
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
+    menu = context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Please choose:',
+        reply_markup=reply_markup
+    )
 
-    update.message.reply_text(text='Please choose:', reply_markup=reply_markup)
-    # context.bot.send_message(chat_id=update.effective_chat.id, text='Please choose:', reply_markup=reply_markup)
+    return menu
 
+
+def show_description_with_image(update, context, elasticpath_token, query_data):
+    product = get_product(elasticpath_token, query_data)
+    product_id = product['data']['id']
+    product_description = product['data']['attributes']['description']
+
+    product_files = get_product_files(elasticpath_token, product_id)
+
+    product_files_ids = product_files['data'][0]['id']
+
+    file = get_file_by_id(elasticpath_token, product_files_ids)
+    file_url = file['data']['link']['href']
+
+    keyboard = [
+        [
+            InlineKeyboardButton('1 кг', callback_data='1'),
+            InlineKeyboardButton('5 кг', callback_data='5'),
+            InlineKeyboardButton('10 кг', callback_data='10'),
+        ],
+        [InlineKeyboardButton('Назад', callback_data='back')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    description = context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=file_url,
+        caption=product_description,
+        reply_markup=reply_markup
+    )
+
+    return description
+
+
+def start(update, context, elasticpath_token):
+    print('start')
+    show_menu(update, context, elasticpath_token)
     return 'HANDLE_MENU'
 
 
@@ -38,30 +75,9 @@ def handle_menu(update, context, elasticpath_token):
     print('handle_menu')
 
     query = update.callback_query
-
     query.answer()
 
-    product = get_product(elasticpath_token, query.data)
-    product_id = product['data']['id']
-    product_description = product['data']['attributes']['description']
-
-    # TODO: What else no image?
-    product_files = get_product_files(elasticpath_token, product_id)
-
-    product_files_ids = product_files['data'][1]['id']
-
-    file = get_file_by_id(elasticpath_token, product_files_ids)
-    file_url = file['data']['link']['href']
-
-    keyboard = [[InlineKeyboardButton('Назад', callback_data='back')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    context.bot.send_photo(
-        chat_id=update.effective_chat.id,
-        photo=file_url,
-        caption=product_description,
-        reply_markup=reply_markup
-    )
+    show_description_with_image(update, context, elasticpath_token, query.data)
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
     return 'HANDLE_DESCRIPTION'
@@ -70,22 +86,22 @@ def handle_menu(update, context, elasticpath_token):
 def handle_description(update, context, elasticpath_token):
     print('handle_description')
 
-    keyboard_buttons = []
+    query = update.callback_query
+    query.answer()
+    print(f"Selected option: {query.data}")
 
-    products = get_all_products(elasticpath_token)
-    for product in products['data']:
-        keyboard_buttons.append(
-            [
-                InlineKeyboardButton(text=product['attributes']['name'], callback_data=product['id'])
-            ]
-        )
+    if query.data == 'back':
+        show_menu(update, context, elasticpath_token)
+        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
+        return 'HANDLE_MENU'
 
-    reply_markup = InlineKeyboardMarkup(keyboard_buttons)
+    tg_user_id = update.effective_user.id
+    # customer = create_customer(elasticpath_token, name='Ivan', email='ivan@localhost.com')
+    custom_cart = get_custom_cart(elasticpath_token, "11111111")
+    print(f'{custom_cart=}')
+    # custom_cart = create_custom_cart(elasticpath_token, name=tg_user_id, cart_id=tg_user_id)
 
-    context.bot.send_message(chat_id=update.effective_chat.id, text='Please choose:', reply_markup=reply_markup)
-    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
-
-    return 'HANDLE_MENU'
+    return 'HANDLE_DESCRIPTION'
 
 
 def handle_users_reply(update, context, elasticpath_token):
@@ -98,6 +114,7 @@ def handle_users_reply(update, context, elasticpath_token):
         chat_id = update.callback_query.message.chat_id
     else:
         return
+    print(f'{user_reply=}')
 
     if user_reply == '/start':
         user_state = 'START'
@@ -148,14 +165,14 @@ def main():
     elasticpath_client_secret = os.getenv('ELASTICPATH_CLIENT_SECRET')
     elasticpath_token = get_token(elasticpath_client_id, elasticpath_client_secret)
 
-    handle_users_reply_ep_token = partial(handle_users_reply, elasticpath_token=elasticpath_token)
+    handle_users_reply_with_token = partial(handle_users_reply, elasticpath_token=elasticpath_token)
 
     updater = Updater(telegram_token)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CallbackQueryHandler(handle_users_reply_ep_token))
-    dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply_ep_token))
-    dispatcher.add_handler(CommandHandler('start', handle_users_reply_ep_token))
+    dispatcher.add_handler(CallbackQueryHandler(handle_users_reply_with_token))
+    dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply_with_token))
+    dispatcher.add_handler(CommandHandler('start', handle_users_reply_with_token))
 
     # start_ep_token = partial(start, elasticpath_token=elasticpath_token)
     # updater.dispatcher.add_handler(CommandHandler('start', start_ep_token))

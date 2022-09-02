@@ -108,6 +108,18 @@ def create_custom_cart(token, name, cart_id):
     return custom_cart.json()
 
 
+def get_custom_cart(token, cart_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}'
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    custom_cart = requests.get(url=url, headers=headers)
+    # custom_cart.raise_for_status()
+
+    return custom_cart.json()
+
+
 def create_customer_cart_association(token, cart_id, customer_id):
     url = f'https://api.moltin.com/v2/carts/{cart_id}/relationships/customers'
     headers = {
