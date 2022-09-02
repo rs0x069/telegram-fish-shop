@@ -14,12 +14,7 @@ _database = None
 
 
 def start(update, context, elasticpath_token):
-    """
-    Хэндлер для состояния START.
-
-    Бот отвечает пользователю фразой "Привет!" и переводит его в состояние ECHO.
-    Теперь в ответ на его команды будет запускаеться хэндлер echo.
-    """
+    print('start')
 
     keyboard_buttons = []
 
@@ -34,11 +29,14 @@ def start(update, context, elasticpath_token):
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
 
     update.message.reply_text(text='Please choose:', reply_markup=reply_markup)
+    # context.bot.send_message(chat_id=update.effective_chat.id, text='Please choose:', reply_markup=reply_markup)
 
     return 'HANDLE_MENU'
 
 
 def handle_menu(update, context, elasticpath_token):
+    print('handle_menu')
+
     query = update.callback_query
 
     query.answer()
@@ -55,25 +53,42 @@ def handle_menu(update, context, elasticpath_token):
     file = get_file_by_id(elasticpath_token, product_files_ids)
     file_url = file['data']['link']['href']
 
-    context.bot.send_photo(chat_id=update.effective_chat.id, photo=file_url, caption=product_description)
+    keyboard = [[InlineKeyboardButton('Назад', callback_data='back')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=file_url,
+        caption=product_description,
+        reply_markup=reply_markup
+    )
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
-    return 'START'
+    return 'HANDLE_DESCRIPTION'
+
+
+def handle_description(update, context, elasticpath_token):
+    print('handle_description')
+
+    keyboard_buttons = []
+
+    products = get_all_products(elasticpath_token)
+    for product in products['data']:
+        keyboard_buttons.append(
+            [
+                InlineKeyboardButton(text=product['attributes']['name'], callback_data=product['id'])
+            ]
+        )
+
+    reply_markup = InlineKeyboardMarkup(keyboard_buttons)
+
+    context.bot.send_message(chat_id=update.effective_chat.id, text='Please choose:', reply_markup=reply_markup)
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
+
+    return 'HANDLE_MENU'
 
 
 def handle_users_reply(update, context, elasticpath_token):
-    """
-    Функция, которая запускается при любом сообщении от пользователя и решает как его обработать.
-    Эта функция запускается в ответ на эти действия пользователя:
-        * Нажатие на inline-кнопку в боте
-        * Отправка сообщения боту
-        * Отправка команды боту
-    Она получает стейт пользователя из базы данных и запускает соответствующую функцию-обработчик (хэндлер).
-    Функция-обработчик возвращает следующее состояние, которое записывается в базу данных.
-    Если пользователь только начал пользоваться ботом, Telegram форсит его написать "/start",
-    поэтому по этой фразе выставляется стартовое состояние.
-    Если пользователь захочет начать общение с ботом заново, он также может воспользоваться этой командой.
-    """
     db = get_database_connection()
     if update.message:
         user_reply = update.message.text
@@ -83,19 +98,23 @@ def handle_users_reply(update, context, elasticpath_token):
         chat_id = update.callback_query.message.chat_id
     else:
         return
+
     if user_reply == '/start':
         user_state = 'START'
     else:
         user_state = db.get(chat_id)
+    print(f'{user_state=}')
 
     states_functions = {
         'START': start,
         'HANDLE_MENU': handle_menu,
+        'HANDLE_DESCRIPTION': handle_description,
     }
+    print(f'{states_functions=}')
+
     state_handler = states_functions[user_state]
-    # Если вы вдруг не заметите, что python-telegram-bot перехватывает ошибки.
-    # Оставляю этот try...except, чтобы код не падал молча.
-    # Этот фрагмент можно переписать.
+    print(f'{state_handler=}')
+
     try:
         next_state = state_handler(update, context, elasticpath_token)
         db.set(chat_id, next_state)
@@ -104,9 +123,6 @@ def handle_users_reply(update, context, elasticpath_token):
 
 
 def get_database_connection():
-    """
-    Возвращает конекшн с базой данных Redis, либо создаёт новый, если он ещё не создан.
-    """
     global _database
     if _database is None:
         database_username = os.getenv("DATABASE_USERNAME")
