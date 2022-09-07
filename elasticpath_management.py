@@ -192,7 +192,20 @@ def add_product_to_cart(token, cart_id, product_id, quantity):
         }
     }
 
-    product = requests.post(url=url, headers=headers, json=data)
-    # product.raise_for_status()
+    cart = requests.post(url=url, headers=headers, json=data)
+    # cart.raise_for_status()
 
-    return product.json()
+    return cart.json()
+
+
+def remove_cart_item(token, cart_id, cart_item_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}/items/{cart_item_id}'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    cart = requests.delete(url=url, headers=headers)
+    # cart.raise_for_status()
+
+    return cart.json()

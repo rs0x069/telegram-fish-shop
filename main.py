@@ -15,10 +15,10 @@ _database = None
 
 
 def show_menu(update, context, elasticpath_token):
-    keyboard_buttons = []
     tg_user_id = update.effective_chat.id
 
     products = get_all_products(elasticpath_token)
+    keyboard_buttons = []
     for product in products['data']:
         keyboard_buttons.append(
             [
@@ -30,7 +30,7 @@ def show_menu(update, context, elasticpath_token):
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
     menu = context.bot.send_message(
         chat_id=tg_user_id,
-        text='Please choose:',
+        text='Выберите товар:',
         reply_markup=reply_markup
     )
 
@@ -76,31 +76,36 @@ def show_cart(update, context, elasticpath_token, tg_user_id):
     print('show_cart')
     cart_items = get_cart_items(elasticpath_token, tg_user_id)
 
-    cart = ''
+    cart = 'Корзина:\n\n'
     for cart_item in cart_items['data']:
         product_quantity = cart_item['quantity']
         product_per_cost = cart_item['unit_price']['amount']
         product_amount = cart_item['value']['amount']
 
-        cart += f"{cart_item['name']}{chr(10)}" \
-                f"{cart_item['description']}{chr(10)}" \
-                f"${product_per_cost} per kg{chr(10)}" \
-                f"{product_quantity}kg in cart for ${product_amount}{chr(10)}" \
-                f"{chr(10)}"
+        cart += f"{cart_item['name']}\n" \
+                f"{cart_item['description']}\n" \
+                f"${product_per_cost} per kg\n" \
+                f"{product_quantity}kg in cart for ${product_amount}\n" \
+                f"\n"
 
     cart_amount = cart_items['meta']['display_price']['with_tax']['amount']
     cart += f'Total: ${cart_amount}'
 
-    keyboard = [
-        [InlineKeyboardButton('Меню', callback_data='menu')]
-    ]
+    keyboard = []
+    for cart_item in cart_items['data']:
+        keyboard.append(
+            [
+                InlineKeyboardButton(text=f"Удалить из корзины: {cart_item['name']}", callback_data=cart_item['id'])
+            ]
+        )
+    keyboard.append([InlineKeyboardButton('Меню', callback_data='menu')])
+
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     cart = context.bot.send_message(
         chat_id=tg_user_id,
         text=cart,
-        reply_markup=reply_markup,
-        parse_mode=telegram.ParseMode.HTML
+        reply_markup=reply_markup
     )
 
     return cart
@@ -161,9 +166,22 @@ def handle_description(update, context, elasticpath_token):
 
 def handle_cart(update, context, elasticpath_token):
     print('handle_cart')
-    show_menu(update, context, elasticpath_token)
+
+    query = update.callback_query
+    query.answer()
+
+    tg_user_id = update.effective_user.id
+
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
-    return 'HANDLE_MENU'
+
+    if query.data == 'menu':
+        show_menu(update, context, elasticpath_token)
+        return 'HANDLE_MENU'
+
+    remove_cart_item(elasticpath_token, tg_user_id, query.data)
+    show_cart(update, context, elasticpath_token, tg_user_id)
+
+    return 'HANDLE_CART'
 
 
 def handle_users_reply(update, context, elasticpath_token):
