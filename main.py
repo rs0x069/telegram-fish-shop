@@ -284,36 +284,8 @@ def main():
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply_with_token))
     dispatcher.add_handler(CommandHandler('start', handle_users_reply_with_token))
 
-    # start_ep_token = partial(start, elasticpath_token=elasticpath_token)
-    # updater.dispatcher.add_handler(CommandHandler('start', start_ep_token))
-    # updater.dispatcher.add_handler(CallbackQueryHandler(button))
-
     updater.start_polling()
     updater.idle()
-
-    # # customer = create_customer(token, name='Ivan', email='ivan@localhost.com')
-    # # print(customer)
-    #
-    # # custom_cart = create_custom_cart(token, name="Ivan's cart", cart_id="ivan_telegram_id")
-    # # print(f'{custom_cart=}')
-    #
-    # cart_id = get_cart(token, cart_id='ivan_telegram_id')['data']['id']
-    # print(f'{cart_id=}')
-    #
-    # # customer_cart_association = create_customer_cart_association(
-    # #     token,
-    # #     cart_id=cart_id,
-    # #     customer_id='f8b8e91c-a346-404a-9aef-24838b0ea4da'
-    # # )
-    # # print(f'{customer_cart_association=}')
-    #
-    # # print(add_product_to_cart(token, cart_id, f'{first_product_id}'))
-    #
-    # cart_items = get_cart_items(token, cart_id)
-    # print(f'{cart_items=}')
-    #
-    # # latest_release_of_catalog = get_latest_release_of_catalog(token, catalog_id='7ea1fbee-7653-40b6-8d16-2575db42c508')
-    # # print(f'{latest_release_of_catalog=}')
 
 
 if __name__ == '__main__':
