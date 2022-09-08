@@ -4,7 +4,6 @@ import redis
 
 from functools import partial
 
-import telegram.parsemode
 from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, Filters, CallbackQueryHandler, CommandHandler, MessageHandler
@@ -193,10 +192,24 @@ def handle_cart(update, context, elasticpath_token):
 
 
 def handle_waiting_email(update, context, elasticpath_token):
-    if update.message:
-        update.message.reply_text(f'Ваш email: {update.message.text}')
+    # TODO: Email validator
+    print('handle_waiting_email')
 
-    return 'HANDLE_CART'
+    tg_user_id = update.effective_user.id
+    customer_email = update.message.text
+    customer_full_name = f'{update.effective_user.first_name} {update.effective_user.last_name}'
+
+    # TODO: What if customer already exist
+    customer = create_customer(elasticpath_token, customer_full_name, customer_email)
+    print(f'{customer=}')
+
+    # TODO: Create something like order
+
+    print('deleted', delete_cart(elasticpath_token, tg_user_id))
+
+    show_menu(update, context, elasticpath_token)
+
+    return 'HANDLE_MENU'
 
 
 def handle_users_reply(update, context, elasticpath_token):

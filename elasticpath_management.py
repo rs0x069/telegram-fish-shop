@@ -90,6 +90,19 @@ def create_customer(token, name, email):
     return customer.json()
 
 
+def get_customer(token, customer_id):
+    url = f'https://api.moltin.com/v2/customers/{customer_id}'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    customer = requests.get(url=url, headers=headers)
+    # customer.raise_for_status()
+
+    return customer.json()
+
+
 def create_custom_cart(token, name, cart_id):
     url = f'https://api.moltin.com/v2/carts'
     headers = {
@@ -209,3 +222,16 @@ def remove_cart_item(token, cart_id, cart_item_id):
     # cart.raise_for_status()
 
     return cart.json()
+
+
+def delete_cart(token, cart_id):
+    url = f'https://api.moltin.com/v2/carts/{cart_id}'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+    }
+
+    cart = requests.delete(url=url, headers=headers)
+    # cart.raise_for_status()
+
+    return cart
