@@ -98,6 +98,7 @@ def show_cart(update, context, elasticpath_token, tg_user_id):
                 InlineKeyboardButton(text=f"Удалить из корзины: {cart_item['name']}", callback_data=cart_item['id'])
             ]
         )
+    keyboard.append([InlineKeyboardButton('Оплатить', callback_data='pay')])
     keyboard.append([InlineKeyboardButton('Меню', callback_data='menu')])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -172,14 +173,28 @@ def handle_cart(update, context, elasticpath_token):
 
     tg_user_id = update.effective_user.id
 
-    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
-
     if query.data == 'menu':
+        context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
         show_menu(update, context, elasticpath_token)
         return 'HANDLE_MENU'
 
+    if query.data == 'pay':
+        context.bot.send_message(
+            chat_id=tg_user_id,
+            text='Напишите Ваш email'
+        )
+        return 'WAITING_EMAIL'
+
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
     remove_cart_item(elasticpath_token, tg_user_id, query.data)
     show_cart(update, context, elasticpath_token, tg_user_id)
+
+    return 'HANDLE_CART'
+
+
+def handle_waiting_email(update, context, elasticpath_token):
+    if update.message:
+        update.message.reply_text(f'Ваш email: {update.message.text}')
 
     return 'HANDLE_CART'
 
@@ -207,6 +222,7 @@ def handle_users_reply(update, context, elasticpath_token):
         'HANDLE_MENU': handle_menu,
         'HANDLE_DESCRIPTION': handle_description,
         'HANDLE_CART': handle_cart,
+        'WAITING_EMAIL': handle_waiting_email,
     }
     print(f'{states_functions=}')
 
