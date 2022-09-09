@@ -225,11 +225,8 @@ def handle_users_reply(update, context, elasticpath_token):
 
     state_handler = states_functions[user_state]
 
-    try:
-        next_state = state_handler(update, context, elasticpath_token)
-        db.set(chat_id, next_state)
-    except Exception as err:
-        print(f'Exception: {err}')
+    next_state = state_handler(update, context, elasticpath_token)
+    db.set(chat_id, next_state)
 
 
 def get_database_connection():
@@ -250,6 +247,10 @@ def get_database_connection():
     return _database
 
 
+def error_handler(update, context):
+    print(context.error)
+
+
 def main():
     load_dotenv()
 
@@ -266,6 +267,8 @@ def main():
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply_with_token))
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply_with_token))
     dispatcher.add_handler(CommandHandler('start', handle_users_reply_with_token))
+
+    dispatcher.add_error_handler(error_handler)
 
     updater.start_polling()
     updater.idle()
