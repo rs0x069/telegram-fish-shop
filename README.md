@@ -7,7 +7,7 @@
 Для хранения этапов покупки используется онлайн-сервис БД Redis [redislabs](https://redislabs.com/).\
 Бот работает на сервисе [Heroku](https://heroku.com/).\
 
-Демо телеграм-бот `@rs0x069_fish_shop_bot`
+Демо-бот доступен по [этой ссылке](https://t.me/rs0x069_fish_shop_bot).
 
 ## Требования
 Python 3.8, 3.9 или 3.10.
