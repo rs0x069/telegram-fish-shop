@@ -72,7 +72,6 @@ def show_description_with_image(update, context, elasticpath_token, query_data):
 
 
 def show_cart(update, context, elasticpath_token, tg_user_id):
-    print('show_cart')
     cart_items = get_cart_items(elasticpath_token, tg_user_id)
 
     cart = 'Корзина:\n\n'
@@ -112,14 +111,11 @@ def show_cart(update, context, elasticpath_token, tg_user_id):
 
 
 def start(update, context, elasticpath_token):
-    print('start')
     show_menu(update, context, elasticpath_token)
     return 'HANDLE_MENU'
 
 
 def handle_menu(update, context, elasticpath_token):
-    print('handle_menu')
-
     query = update.callback_query
     query.answer()
 
@@ -137,11 +133,8 @@ def handle_menu(update, context, elasticpath_token):
 
 
 def handle_description(update, context, elasticpath_token):
-    print('handle_description')
-
     query = update.callback_query
     query.answer()
-    print(f"Selected option: {query.data}")
 
     tg_user_id = update.effective_user.id
 
@@ -165,8 +158,6 @@ def handle_description(update, context, elasticpath_token):
 
 
 def handle_cart(update, context, elasticpath_token):
-    print('handle_cart')
-
     query = update.callback_query
     query.answer()
 
@@ -193,19 +184,15 @@ def handle_cart(update, context, elasticpath_token):
 
 def handle_waiting_email(update, context, elasticpath_token):
     # TODO: Email validator
-    print('handle_waiting_email')
-
     tg_user_id = update.effective_user.id
     customer_email = update.message.text
     customer_full_name = f'{update.effective_user.first_name} {update.effective_user.last_name}'
 
     # TODO: What if customer already exist
     customer = create_customer(elasticpath_token, customer_full_name, customer_email)
-    print(f'{customer=}')
 
     # TODO: Create something like order
-
-    print('deleted', delete_cart(elasticpath_token, tg_user_id))
+    delete_cart(elasticpath_token, tg_user_id)
 
     show_menu(update, context, elasticpath_token)
 
@@ -222,13 +209,11 @@ def handle_users_reply(update, context, elasticpath_token):
         chat_id = update.callback_query.message.chat_id
     else:
         return
-    print(f'{user_reply=}')
 
     if user_reply == '/start':
         user_state = 'START'
     else:
         user_state = db.get(chat_id)
-    print(f'{user_state=}')
 
     states_functions = {
         'START': start,
@@ -237,10 +222,8 @@ def handle_users_reply(update, context, elasticpath_token):
         'HANDLE_CART': handle_cart,
         'WAITING_EMAIL': handle_waiting_email,
     }
-    print(f'{states_functions=}')
 
     state_handler = states_functions[user_state]
-    print(f'{state_handler=}')
 
     try:
         next_state = state_handler(update, context, elasticpath_token)
