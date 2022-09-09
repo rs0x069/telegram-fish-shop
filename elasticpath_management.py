@@ -11,7 +11,7 @@ def get_token(client_id, client_secret):
     }
 
     response = requests.post(url=url, data=data)
-    # response.raise_for_status()
+    response.raise_for_status()
     json_response = response.json()
     token = json_response["access_token"]
 
@@ -26,7 +26,7 @@ def get_all_products(token):
     }
 
     products = requests.get(url=url, headers=headers)
-    # products.raise_for_status()
+    products.raise_for_status()
 
     return products.json()
 
@@ -39,7 +39,7 @@ def get_product(token, product_id):
     }
 
     product = requests.get(url=url, headers=headers)
-    # product.raise_for_status()
+    product.raise_for_status()
 
     return product.json()
 
@@ -52,7 +52,7 @@ def get_product_files(token, product_id):
     }
 
     product_files = requests.get(url=url, headers=headers)
-    # product_files.raise_for_status()
+    product_files.raise_for_status()
 
     return product_files.json()
 
@@ -65,7 +65,7 @@ def get_file_by_id(token, file_id):
     }
 
     file = requests.get(url=url, headers=headers)
-    # file.raise_for_status()
+    file.raise_for_status()
 
     return file.json()
 
@@ -80,12 +80,11 @@ def create_customer(token, name, email):
             'type': 'customer',
             'name': name,
             'email': email,
-            # 'password': 'mysecretpassword'
         }
     }
 
     customer = requests.post(url=url, headers=headers, json=data)
-    # customer.raise_for_status()
+    customer.raise_for_status()
 
     return customer.json()
 
@@ -98,7 +97,7 @@ def get_customer(token, customer_id):
     }
 
     customer = requests.get(url=url, headers=headers)
-    # customer.raise_for_status()
+    customer.raise_for_status()
 
     return customer.json()
 
@@ -116,7 +115,7 @@ def create_custom_cart(token, name, cart_id):
     }
 
     custom_cart = requests.post(url=url, headers=headers, json=data)
-    # custom_cart.raise_for_status()
+    custom_cart.raise_for_status()
 
     return custom_cart.json()
 
@@ -128,7 +127,7 @@ def get_custom_cart(token, cart_id):
     }
 
     custom_cart = requests.get(url=url, headers=headers)
-    # custom_cart.raise_for_status()
+    custom_cart.raise_for_status()
 
     return custom_cart.json()
 
@@ -146,7 +145,7 @@ def create_customer_cart_association(token, cart_id, customer_id):
     }
 
     customer_cart_association = requests.post(url=url, headers=headers, json=data)
-    # customer_cart_association.raise_for_status()
+    customer_cart_association.raise_for_status()
 
     if customer_cart_association.status_code == 204:
         return 'The customer has already been associated to the cart'
@@ -161,7 +160,7 @@ def get_cart(token, cart_id):
     }
 
     cart = requests.get(url=url, headers=headers)
-    # cart.raise_for_status()
+    cart.raise_for_status()
 
     return cart.json()
 
@@ -173,7 +172,7 @@ def get_latest_release_of_catalog(token, catalog_id):
     }
 
     latest_release = requests.get(url=url, headers=headers)
-    # latest_release.raise_for_status()
+    latest_release.raise_for_status()
 
     return latest_release.json()
 
@@ -185,7 +184,7 @@ def get_cart_items(token, cart_id):
     }
 
     cart_items = requests.get(url=url, headers=headers)
-    # cart_items.raise_for_status()
+    cart_items.raise_for_status()
 
     return cart_items.json()
 
@@ -206,7 +205,7 @@ def add_product_to_cart(token, cart_id, product_id, quantity):
     }
 
     cart = requests.post(url=url, headers=headers, json=data)
-    # cart.raise_for_status()
+    cart.raise_for_status()
 
     return cart.json()
 
@@ -219,7 +218,7 @@ def remove_cart_item(token, cart_id, cart_item_id):
     }
 
     cart = requests.delete(url=url, headers=headers)
-    # cart.raise_for_status()
+    cart.raise_for_status()
 
     return cart.json()
 
@@ -232,6 +231,6 @@ def delete_cart(token, cart_id):
     }
 
     cart = requests.delete(url=url, headers=headers)
-    # cart.raise_for_status()
+    cart.raise_for_status()
 
     return cart
