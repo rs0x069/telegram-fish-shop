@@ -45,8 +45,7 @@ pip install -r requirements.txt
 python tg_fish_shop.py
 ```
 
-## Примеры
-#### Пример результата для Telegram:
+## Пример
 ![Пример результата для Telegram](https://raw.githubusercontent.com/rs0x069/telegram-fish-shop/main/.github/images/fish-shop.gif)
 
 ***
