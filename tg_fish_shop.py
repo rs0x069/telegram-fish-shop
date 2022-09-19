@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 import redis
 
@@ -80,11 +81,13 @@ def show_cart(update, context, elasticpath_token, tg_user_id):
         product_per_cost = cart_item['unit_price']['amount']
         product_amount = cart_item['value']['amount']
 
-        cart += f"{cart_item['name']}\n" \
-                f"{cart_item['description']}\n" \
-                f"${product_per_cost} per kg\n" \
-                f"{product_quantity}kg in cart for ${product_amount}\n" \
-                f"\n"
+        cart += textwrap.dedent(f"""\
+                {cart_item['name']}
+                {cart_item['description']}
+                ${product_per_cost} per kg
+                {product_quantity}kg in cart for ${product_amount}
+                
+                """)
 
     cart_amount = cart_items['meta']['display_price']['with_tax']['amount']
     cart += f'Total: ${cart_amount}'
