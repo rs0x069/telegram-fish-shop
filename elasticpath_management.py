@@ -12,8 +12,8 @@ def get_token(client_id, client_secret):
 
     response = requests.post(url=url, data=data)
     response.raise_for_status()
-    json_response = response.json()
-    token = json_response["access_token"]
+    response_encoded = response.json()
+    token = response_encoded["access_token"]
 
     return token
 
