@@ -1,7 +1,9 @@
 import requests
 
+from time import time
 
-def get_token(client_id, client_secret):
+
+def get_token(client_id, client_secret, token_expires=0):
     url = 'https://api.moltin.com/oauth/access_token'
 
     data = {
@@ -10,10 +12,16 @@ def get_token(client_id, client_secret):
         'grant_type': 'client_credentials',
     }
 
+    timestamp_current = time()
+
+    if timestamp_current > token_expires:
+        ...
+
     response = requests.post(url=url, data=data)
     response.raise_for_status()
     response_encoded = response.json()
     token = response_encoded["access_token"]
+    token_expires = response_encoded["expires"]
 
     return token
 
