@@ -1,116 +1,23 @@
 import os
-import textwrap
 
 import redis
 
 from functools import partial
 
 from dotenv import load_dotenv
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, Filters, CallbackQueryHandler, CommandHandler, MessageHandler
 
-from elasticpath_management import *
+from elasticpath_management import (
+    get_token,
+    add_product_to_cart,
+    get_cart_items,
+    remove_cart_item,
+    create_customer,
+    delete_cart
+)
+from catalog_api import show_menu, show_description_with_image, show_cart
 
 _database = None
-
-
-def show_menu(update, context, elasticpath_token):
-    tg_user_id = update.effective_chat.id
-
-    products = get_all_products(elasticpath_token)
-    keyboard_buttons = []
-    for product in products['data']:
-        keyboard_buttons.append(
-            [
-                InlineKeyboardButton(text=product['attributes']['name'], callback_data=product['id'])
-            ]
-        )
-    keyboard_buttons.append([InlineKeyboardButton(text='Корзина', callback_data=str(tg_user_id))])
-
-    reply_markup = InlineKeyboardMarkup(keyboard_buttons)
-    menu = context.bot.send_message(
-        chat_id=tg_user_id,
-        text='Выберите товар:',
-        reply_markup=reply_markup
-    )
-
-    return menu
-
-
-def show_description_with_image(update, context, elasticpath_token, query_data):
-    tg_user_id = update.effective_chat.id
-
-    product = get_product(elasticpath_token, query_data)
-    product_id = product['data']['id']
-    product_description = product['data']['attributes']['description']
-
-    product_files = get_product_files(elasticpath_token, product_id)
-
-    product_files_ids = product_files['data'][0]['id']
-
-    file = get_file_by_id(elasticpath_token, product_files_ids)
-    file_url = file['data']['link']['href']
-
-    keyboard = [
-        [
-            InlineKeyboardButton('1 кг', callback_data=f'{product_id}_1'),
-            InlineKeyboardButton('5 кг', callback_data=f'{product_id}_5'),
-            InlineKeyboardButton('10 кг', callback_data=f'{product_id}_10'),
-        ],
-        [InlineKeyboardButton('Корзина', callback_data=str(tg_user_id))],
-        [InlineKeyboardButton('Меню', callback_data='menu')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    description = context.bot.send_photo(
-        chat_id=tg_user_id,
-        photo=file_url,
-        caption=product_description,
-        reply_markup=reply_markup
-    )
-
-    return description
-
-
-def show_cart(update, context, elasticpath_token, tg_user_id):
-    cart_items = get_cart_items(elasticpath_token, tg_user_id)
-
-    cart = 'Корзина:\n\n'
-    for cart_item in cart_items['data']:
-        product_quantity = cart_item['quantity']
-        product_per_cost = cart_item['unit_price']['amount']
-        product_amount = cart_item['value']['amount']
-
-        cart += textwrap.dedent(f"""\
-                {cart_item['name']}
-                {cart_item['description']}
-                ${product_per_cost} per kg
-                {product_quantity}kg in cart for ${product_amount}
-                
-                """)
-
-    cart_amount = cart_items['meta']['display_price']['with_tax']['amount']
-    cart += f'Total: ${cart_amount}'
-
-    keyboard = []
-    for cart_item in cart_items['data']:
-        keyboard.append(
-            [
-                InlineKeyboardButton(text=f"Удалить из корзины: {cart_item['name']}", callback_data=cart_item['id'])
-            ]
-        )
-    keyboard.append([InlineKeyboardButton('Оплатить', callback_data='pay')])
-    keyboard.append([InlineKeyboardButton('Меню', callback_data='menu')])
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    cart = context.bot.send_message(
-        chat_id=tg_user_id,
-        text=cart,
-        reply_markup=reply_markup
-    )
-
-    return cart
 
 
 def start(update, context, elasticpath_token):
