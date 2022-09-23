@@ -1,6 +1,7 @@
 import textwrap
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.constants import PARSEMODE_HTML
 
 from elasticpath_management import (
     get_product,
@@ -27,8 +28,9 @@ def show_menu(update, context, elasticpath_token):
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
     menu = context.bot.send_message(
         chat_id=tg_user_id,
-        text='Выберите товар:',
-        reply_markup=reply_markup
+        text='<b>Выберите товар:</b>',
+        reply_markup=reply_markup,
+        parse_mode=PARSEMODE_HTML
     )
 
     return menu
@@ -72,22 +74,22 @@ def show_description_with_image(update, context, elasticpath_token, query_data):
 def show_cart(update, context, elasticpath_token, tg_user_id):
     cart_items = get_cart_items(elasticpath_token, tg_user_id)
 
-    cart = 'Корзина:\n\n'
+    cart = '<b>Корзина:</b>\n\n'
     for cart_item in cart_items['data']:
         product_quantity = cart_item['quantity']
         product_per_cost = cart_item['unit_price']['amount']
         product_amount = cart_item['value']['amount']
 
         cart += textwrap.dedent(f"""\
-                {cart_item['name']}
-                {cart_item['description']}
+                <b>{cart_item['name']}</b>
+                <i>{cart_item['description']}</i>
                 ${product_per_cost} per kg
                 {product_quantity}kg in cart for ${product_amount}
 
                 """)
 
     cart_amount = cart_items['meta']['display_price']['with_tax']['amount']
-    cart += f'Total: ${cart_amount}'
+    cart += f'<b>Total: ${cart_amount}</b>'
 
     keyboard = []
     for cart_item in cart_items['data']:
@@ -104,7 +106,8 @@ def show_cart(update, context, elasticpath_token, tg_user_id):
     cart = context.bot.send_message(
         chat_id=tg_user_id,
         text=cart,
-        reply_markup=reply_markup
+        reply_markup=reply_markup,
+        parse_mode=PARSEMODE_HTML
     )
 
     return cart
