@@ -44,7 +44,6 @@ def handle_menu(update, context, elasticpath_token):
 
 def handle_description(update, context, elasticpath_token):
     query = update.callback_query
-    query.answer()
 
     tg_user_id = update.effective_user.id
 
@@ -63,6 +62,8 @@ def handle_description(update, context, elasticpath_token):
 
     add_product_to_cart(elasticpath_token, tg_user_id, product_id, int(product_quantity))
     cart_items = get_cart_items(elasticpath_token, tg_user_id)
+
+    update.callback_query.answer(text='Товар добавлен в корзину')
 
     return 'HANDLE_DESCRIPTION'
 
