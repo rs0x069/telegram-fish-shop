@@ -53,7 +53,17 @@ def show_description_with_image(update, context, query_data):
 
     product = get_product(query_data)
     product_id = product['data']['id']
-    product_description = product['data']['attributes']['description']
+
+    product_quantity = None
+    cart_items = get_cart_items(tg_user_id)
+    for cart_item in cart_items['data']:
+        if cart_item['product_id'] == product_id:
+            product_quantity = cart_item['quantity']
+
+    product_description = textwrap.dedent(f"""
+        {product['data']['attributes']['description']}
+        {"In the cart already: %skg" % product_quantity if product_quantity else ""}
+    """)
 
     product_files = get_product_files(product_id)
 
