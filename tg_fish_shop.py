@@ -2,13 +2,10 @@ import os
 
 import redis
 
-from functools import partial
-
 from dotenv import load_dotenv
 from telegram.ext import Updater, Filters, CallbackQueryHandler, CommandHandler, MessageHandler
 
 from elasticpath_management import (
-    get_token,
     add_product_to_cart,
     get_cart_items,
     remove_cart_item,
@@ -20,55 +17,55 @@ from catalog_api import show_menu, show_description_with_image, show_cart
 _database = None
 
 
-def start(update, context, elasticpath_token):
-    show_menu(update, context, elasticpath_token)
+def start(update, context):
+    show_menu(update, context)
     return 'HANDLE_MENU'
 
 
-def handle_menu(update, context, elasticpath_token):
+def handle_menu(update, context):
     query = update.callback_query
     query.answer()
 
     tg_user_id = update.effective_user.id
 
     if query.data == str(tg_user_id):
-        show_cart(update, context, elasticpath_token, tg_user_id)
+        show_cart(update, context, tg_user_id)
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
         return 'HANDLE_CART'
 
-    show_description_with_image(update, context, elasticpath_token, query.data)
+    show_description_with_image(update, context, query.data)
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
     return 'HANDLE_DESCRIPTION'
 
 
-def handle_description(update, context, elasticpath_token):
+def handle_description(update, context):
     query = update.callback_query
 
     tg_user_id = update.effective_user.id
 
     if query.data == 'menu':
-        show_menu(update, context, elasticpath_token)
+        show_menu(update, context)
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
         return 'HANDLE_MENU'
 
     if query.data == str(tg_user_id):
-        show_cart(update, context, elasticpath_token, tg_user_id)
+        show_cart(update, context, tg_user_id)
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
         return 'HANDLE_CART'
 
     product_id = query.data.split('_')[0]
     product_quantity = query.data.split('_')[1]
 
-    add_product_to_cart(elasticpath_token, tg_user_id, product_id, int(product_quantity))
-    cart_items = get_cart_items(elasticpath_token, tg_user_id)
+    add_product_to_cart(tg_user_id, product_id, int(product_quantity))
+    cart_items = get_cart_items(tg_user_id)
 
     update.callback_query.answer(text='Товар добавлен в корзину')
 
     return 'HANDLE_DESCRIPTION'
 
 
-def handle_cart(update, context, elasticpath_token):
+def handle_cart(update, context):
     query = update.callback_query
     query.answer()
 
@@ -76,7 +73,7 @@ def handle_cart(update, context, elasticpath_token):
 
     if query.data == 'menu':
         context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
-        show_menu(update, context, elasticpath_token)
+        show_menu(update, context)
         return 'HANDLE_MENU'
 
     if query.data == 'pay':
@@ -87,30 +84,30 @@ def handle_cart(update, context, elasticpath_token):
         return 'WAITING_EMAIL'
 
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
-    remove_cart_item(elasticpath_token, tg_user_id, query.data)
-    show_cart(update, context, elasticpath_token, tg_user_id)
+    remove_cart_item(tg_user_id, query.data)
+    show_cart(update, context, tg_user_id)
 
     return 'HANDLE_CART'
 
 
-def handle_waiting_email(update, context, elasticpath_token):
+def handle_waiting_email(update, context):
     # TODO: Email validator
     tg_user_id = update.effective_user.id
     customer_email = update.message.text
     customer_full_name = f'{update.effective_user.first_name} {update.effective_user.last_name}'
 
     # TODO: What if customer already exist
-    customer = create_customer(elasticpath_token, customer_full_name, customer_email)
+    customer = create_customer(customer_full_name, customer_email)
 
     # TODO: Create something like order
-    delete_cart(elasticpath_token, tg_user_id)
+    delete_cart(tg_user_id)
 
-    show_menu(update, context, elasticpath_token)
+    show_menu(update, context)
 
     return 'HANDLE_MENU'
 
 
-def handle_users_reply(update, context, elasticpath_token):
+def handle_users_reply(update, context):
     db = get_database_connection()
     if update.message:
         user_reply = update.message.text
@@ -136,7 +133,7 @@ def handle_users_reply(update, context, elasticpath_token):
 
     state_handler = states_functions[user_state]
 
-    next_state = state_handler(update, context, elasticpath_token)
+    next_state = state_handler(update, context)
     db.set(chat_id, next_state)
 
 
@@ -166,18 +163,13 @@ def main():
     load_dotenv()
 
     telegram_token = os.getenv("TELEGRAM_TOKEN")
-    elasticpath_client_id = os.getenv('ELASTICPATH_CLIENT_ID')
-    elasticpath_client_secret = os.getenv('ELASTICPATH_CLIENT_SECRET')
-    elasticpath_token = get_token(elasticpath_client_id, elasticpath_client_secret)
-
-    handle_users_reply_with_token = partial(handle_users_reply, elasticpath_token=elasticpath_token)
 
     updater = Updater(telegram_token)
     dispatcher = updater.dispatcher
 
-    dispatcher.add_handler(CallbackQueryHandler(handle_users_reply_with_token))
-    dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply_with_token))
-    dispatcher.add_handler(CommandHandler('start', handle_users_reply_with_token))
+    dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
+    dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply))
+    dispatcher.add_handler(CommandHandler('start', handle_users_reply))
 
     dispatcher.add_error_handler(error_handler)
 

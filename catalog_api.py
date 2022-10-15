@@ -13,10 +13,10 @@ from elasticpath_management import (
 )
 
 
-def show_menu(update, context, elasticpath_token):
+def show_menu(update, context):
     tg_user_id = update.effective_chat.id
 
-    products = get_all_products(elasticpath_token)
+    products = get_all_products()
     keyboard_buttons = []
     for product in products['data']:
         keyboard_buttons.append(
@@ -48,18 +48,18 @@ def show_menu(update, context, elasticpath_token):
     return menu
 
 
-def show_description_with_image(update, context, elasticpath_token, query_data):
+def show_description_with_image(update, context, query_data):
     tg_user_id = update.effective_chat.id
 
-    product = get_product(elasticpath_token, query_data)
+    product = get_product(query_data)
     product_id = product['data']['id']
     product_description = product['data']['attributes']['description']
 
-    product_files = get_product_files(elasticpath_token, product_id)
+    product_files = get_product_files(product_id)
 
     product_files_ids = product_files['data'][0]['id']
 
-    file = get_file_by_id(elasticpath_token, product_files_ids)
+    file = get_file_by_id(product_files_ids)
     file_url = file['data']['link']['href']
 
     keyboard = [
@@ -83,8 +83,8 @@ def show_description_with_image(update, context, elasticpath_token, query_data):
     return description
 
 
-def show_cart(update, context, elasticpath_token, tg_user_id):
-    cart_items = get_cart_items(elasticpath_token, tg_user_id)
+def show_cart(update, context, tg_user_id):
+    cart_items = get_cart_items(tg_user_id)
 
     cart = '*Корзина:*\n\n'
     for cart_item in cart_items['data']:

@@ -1,9 +1,20 @@
+import os
+
 import requests
 
 from time import time
 
+token = None
+token_expires = None
 
-def get_token(client_id, client_secret, token_expires=0):
+
+def get_token():
+    global token
+    global token_expires
+
+    client_id = os.getenv('ELASTICPATH_CLIENT_ID')
+    client_secret = os.getenv('ELASTICPATH_CLIENT_SECRET')
+
     url = 'https://api.moltin.com/oauth/access_token'
 
     data = {
@@ -14,19 +25,17 @@ def get_token(client_id, client_secret, token_expires=0):
 
     timestamp_current = time()
 
-    if timestamp_current > token_expires:
-        ...
-
-    response = requests.post(url=url, data=data)
-    response.raise_for_status()
-    response_encoded = response.json()
-    token = response_encoded["access_token"]
-    token_expires = response_encoded["expires"]
-
-    return token
+    if not token or timestamp_current > token_expires:
+        response = requests.post(url=url, data=data)
+        response.raise_for_status()
+        response_encoded = response.json()
+        token = response_encoded["access_token"]
+        token_expires = response_encoded["expires"]
 
 
-def get_all_products(token):
+def get_all_products():
+    get_token()
+
     url = 'https://api.moltin.com/pcm/products'
 
     headers = {
@@ -39,7 +48,9 @@ def get_all_products(token):
     return products.json()
 
 
-def get_product(token, product_id):
+def get_product(product_id):
+    get_token()
+
     url = f'https://api.moltin.com/pcm/products/{product_id}'
 
     headers = {
@@ -52,7 +63,9 @@ def get_product(token, product_id):
     return product.json()
 
 
-def get_product_files(token, product_id):
+def get_product_files(product_id):
+    get_token()
+
     url = f'https://api.moltin.com/pcm/products/{product_id}/relationships/files'
 
     headers = {
@@ -65,7 +78,9 @@ def get_product_files(token, product_id):
     return product_files.json()
 
 
-def get_file_by_id(token, file_id):
+def get_file_by_id(file_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/files/{file_id}'
 
     headers = {
@@ -78,7 +93,9 @@ def get_file_by_id(token, file_id):
     return file.json()
 
 
-def create_customer(token, name, email):
+def create_customer(name, email):
+    get_token()
+
     url = f'https://api.moltin.com/v2/customers'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -97,7 +114,9 @@ def create_customer(token, name, email):
     return customer.json()
 
 
-def get_customer(token, customer_id):
+def get_customer(customer_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/customers/{customer_id}'
 
     headers = {
@@ -110,7 +129,9 @@ def get_customer(token, customer_id):
     return customer.json()
 
 
-def create_custom_cart(token, name, cart_id):
+def create_custom_cart(name, cart_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -128,7 +149,9 @@ def create_custom_cart(token, name, cart_id):
     return custom_cart.json()
 
 
-def get_custom_cart(token, cart_id):
+def get_custom_cart(cart_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -140,7 +163,9 @@ def get_custom_cart(token, cart_id):
     return custom_cart.json()
 
 
-def create_customer_cart_association(token, cart_id, customer_id):
+def create_customer_cart_association(cart_id, customer_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}/relationships/customers'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -161,7 +186,9 @@ def create_customer_cart_association(token, cart_id, customer_id):
     return customer_cart_association.json()
 
 
-def get_cart(token, cart_id):
+def get_cart(cart_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -173,7 +200,9 @@ def get_cart(token, cart_id):
     return cart.json()
 
 
-def get_latest_release_of_catalog(token, catalog_id):
+def get_latest_release_of_catalog(catalog_id):
+    get_token()
+
     url = f'https://api.moltin.com/pcm/catalogs/{catalog_id}/releases/latest'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -185,7 +214,9 @@ def get_latest_release_of_catalog(token, catalog_id):
     return latest_release.json()
 
 
-def get_cart_items(token, cart_id):
+def get_cart_items(cart_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
     headers = {
         'Authorization': f'Bearer {token}',
@@ -197,7 +228,9 @@ def get_cart_items(token, cart_id):
     return cart_items.json()
 
 
-def add_product_to_cart(token, cart_id, product_id, quantity):
+def add_product_to_cart(cart_id, product_id, quantity):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items'
 
     headers = {
@@ -218,7 +251,9 @@ def add_product_to_cart(token, cart_id, product_id, quantity):
     return cart.json()
 
 
-def remove_cart_item(token, cart_id, cart_item_id):
+def remove_cart_item(cart_id, cart_item_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}/items/{cart_item_id}'
 
     headers = {
@@ -231,7 +266,9 @@ def remove_cart_item(token, cart_id, cart_item_id):
     return cart.json()
 
 
-def delete_cart(token, cart_id):
+def delete_cart(cart_id):
+    get_token()
+
     url = f'https://api.moltin.com/v2/carts/{cart_id}'
 
     headers = {
