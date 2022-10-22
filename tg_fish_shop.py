@@ -62,7 +62,6 @@ def handle_description(update, context):
 
     update.callback_query.answer(text='Товар добавлен в корзину')
 
-    # Update photo description after adding product
     context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
     show_description_with_image(update, context, product_id)
 
@@ -95,13 +94,11 @@ def handle_cart(update, context):
 
 
 def handle_waiting_email(update, context):
-    # TODO: Email validator
     tg_user_id = update.effective_user.id
     customer_email = update.message.text
     customer_full_name = f'{update.effective_user.first_name} {update.effective_user.last_name}'
 
-    # TODO: What if customer already exist
-    customer = create_customer(customer_full_name, customer_email)
+    create_customer(customer_full_name, customer_email)
 
     # TODO: Create something like order
     delete_cart(tg_user_id)

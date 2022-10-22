@@ -2,7 +2,6 @@ import textwrap
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import PARSEMODE_MARKDOWN_V2
-from telegram_bot_pagination import InlineKeyboardPaginator
 
 from elasticpath_management import (
     get_product,
@@ -27,15 +26,6 @@ def show_menu(update, context):
     keyboard_buttons.append([InlineKeyboardButton(text='Корзина', callback_data=str(tg_user_id))])
 
     reply_markup = InlineKeyboardMarkup(keyboard_buttons)
-
-    # paginator = InlineKeyboardPaginator(page_count=2)
-    # # paginator.add_before(button for button in keyboard_buttons)
-    # paginator.add_before(
-    #     InlineKeyboardButton('Like', callback_data='like#{}'.format(1)),
-    #     InlineKeyboardButton('Dislike', callback_data='dislike#{}'.format(2)),
-    #     InlineKeyboardButton('Dislike', callback_data='dislike#{}'.format(3)),
-    # )
-    # paginator.add_after(InlineKeyboardButton(text='Корзина', callback_data=str(tg_user_id)))
 
     menu = context.bot.send_message(
         chat_id=tg_user_id,
