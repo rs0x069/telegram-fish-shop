@@ -62,8 +62,8 @@ def handle_description(update, context):
 
     update.callback_query.answer(text='Товар добавлен в корзину')
 
-    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
     show_description_with_image(update, context, product_id)
+    context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
     return 'HANDLE_DESCRIPTION'
 
